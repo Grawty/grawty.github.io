@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="tr" class="boot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>grawty</title>
+<meta name="description" content="grawty — kod yazar, yapay zekâyla uğraşır. / grawty — writes code, plays with AI.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="https://github.com/grawty.png?size=64">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --fg: #f2f2f0;
+    --mute: #8a8a86;
+    --line: #232323;
+    --raise: #0c0c0c;
+    --acc: #d6ff3d;
+    --sans: "IBM Plex Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bg); color-scheme: dark; }
+  body {
+    min-height: 100svh; background: var(--bg); color: var(--fg);
+    font: 400 15px/1.5 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: max(2.5rem, env(safe-area-inset-top)) 1rem max(2rem, env(safe-area-inset-bottom));
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--acc); color: #000; }
+  :focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+
+  .wrap { position: relative; max-width: 480px; margin: 0 auto; }
+
+  .lang {
+    position: absolute; top: -1.2rem; right: 0; z-index: 11;
+    display: flex; border: 1px solid var(--line); border-radius: 99px; padding: 2px;
+    font: 500 11px var(--mono);
+  }
+  .lang button {
+    font: inherit; color: var(--mute); background: none; border: 0; cursor: pointer;
+    padding: .2rem .55rem; border-radius: 99px; transition: color .15s, background .15s;
+  }
+  .lang button:hover { color: var(--fg); }
+  .lang button[aria-pressed="true"] { background: var(--fg); color: #000; }
+
+  .me { text-align: center; }
+  .av {
+    width: 96px; height: 96px; margin: 0 auto 1.1rem; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--raise);
+    display: grid; place-items: center; overflow: hidden;
+    font: 600 2.4rem var(--sans); color: var(--acc);
+  }
+  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  h1 { font: 600 1.55rem/1.2 var(--sans); letter-spacing: -.02em; }
+  .handle { font: 400 13px var(--mono); color: var(--mute); margin-top: .15rem; }
+  .bio { margin: .9rem auto 0; max-width: 34ch; color: #c9c9c5; }
+
+  .music {
+    display: inline-flex; align-items: center; gap: .65rem; margin-top: 1rem; max-width: 100%;
+    border: 1px solid var(--line); border-radius: 99px; padding: .35rem .95rem .35rem .8rem;
+    font: 400 12px var(--mono); color: var(--fg);
+    transition: border-color .15s;
+  }
+  a.music:hover { border-color: #5a5a58; }
+  .music .eq { display: flex; align-items: flex-end; gap: 2px; height: 13px; flex: none; }
+  .music .eq i {
+    width: 3px; height: 100%; border-radius: 1px; background: var(--acc);
+    transform-origin: bottom; transform: scaleY(.55);
+    animation: eq 1s ease-in-out infinite;
+  }
+  .music .eq i:nth-child(1) { animation-duration: .9s;  animation-delay: -.2s; }
+  .music .eq i:nth-child(2) { animation-duration: 1.2s; animation-delay: -.7s; }
+  .music .eq i:nth-child(3) { animation-duration: .75s; animation-delay: -.4s; }
+  .music .eq i:nth-child(4) { animation-duration: 1.05s; animation-delay: -.1s; }
+  @keyframes eq { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+  .music .lb { color: var(--mute); margin-right: .45rem; }
+  .music .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .tabs-wrap { position: sticky; top: 0; z-index: 10; margin: 1.6rem -1rem 1rem; padding: .6rem 1rem; background: var(--bg); }
+  .tabs {
+    position: relative; display: grid; grid-template-columns: repeat(4, 1fr);
+    padding: 4px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg);
+  }
+  .tabs .pill {
+    position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; border-radius: 12px;
+    background: var(--fg); pointer-events: none;
+    transition: transform .42s cubic-bezier(.3, 1.25, .5, 1), width .42s cubic-bezier(.3, 1.25, .5, 1);
+  }
+  .tabs button {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+    font: 500 14px var(--sans); color: var(--mute); background: none; border: 0; cursor: pointer;
+    padding: .75rem 0; border-radius: 12px; transition: color .25s;
+  }
+  .tabs button:hover { color: var(--fg); }
+  .tabs button[aria-selected="true"] { color: #000; }
+  .tabs button:focus-visible { outline-offset: -2px; }
+  .tabs em {
+    font: 500 10px/1 var(--mono); font-style: normal;
+    background: var(--acc); color: #000; border-radius: 99px; padding: 2px 5px;
+  }
+
+  .panel { display: flex; flex-direction: column; gap: .6rem; }
+  @keyframes in { from { opacity: 0; transform: translateX(var(--dx, 0)) translateY(8px); } }
+  .panel > * { animation: in .45s cubic-bezier(.2, .8, .2, 1) both; }
+  .panel > * { animation-delay: var(--base, 0s); }
+  .panel > *:nth-child(2) { animation-delay: calc(var(--base, 0s) + .05s); }
+  .panel > *:nth-child(3) { animation-delay: calc(var(--base, 0s) + .1s); }
+  .panel > *:nth-child(4) { animation-delay: calc(var(--base, 0s) + .15s); }
+  .panel > *:nth-child(5) { animation-delay: calc(var(--base, 0s) + .2s); }
+  .panel > *:nth-child(n+6) { animation-delay: calc(var(--base, 0s) + .25s); }
+
+  .boot { --base: .55s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes pop  { from { opacity: 0; transform: translateY(14px) scale(.9); } }
+  .me .av    { animation: pop  .7s cubic-bezier(.2, .8, .2, 1) .05s both; }
+  .me h1     { animation: rise .6s cubic-bezier(.2, .8, .2, 1) .18s both; }
+  .me .handle{ animation: rise .6s cubic-bezier(.2, .8, .2, 1) .24s both; }
+  .me .bio   { animation: rise .6s cubic-bezier(.2, .8, .2, 1) .3s both; }
+  .me #music { animation: rise .6s cubic-bezier(.2, .8, .2, 1) .38s both; }
+  .tabs-wrap { animation: rise .6s cubic-bezier(.2, .8, .2, 1) .46s both; }
+  .lang      { animation: rise .6s cubic-bezier(.2, .8, .2, 1) .1s both; }
+
+  .row {
+    display: flex; align-items: center; gap: .9rem; min-height: 60px;
+    padding: .85rem 1.1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--bg);
+    transition: border-color .15s, background .15s, transform .12s;
+  }
+  a.row:hover { border-color: #5a5a58; background: var(--raise); }
+  a.row:active { transform: scale(.985); }
+  .row .t { flex: 1; min-width: 0; }
+  .row b { display: block; font-weight: 500; }
+  .row small { display: block; color: var(--mute); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .go { color: var(--mute); font: 400 1.1rem var(--sans); transition: transform .15s, color .15s; }
+  a.row:hover .go { color: var(--acc); transform: translate(2px, -2px); }
+  .row .meta { font: 400 12px var(--mono); color: var(--mute); white-space: nowrap; }
+  .row.hl { border-color: var(--acc); }
+  .row.hl b { color: var(--acc); }
+  a.row.pink:hover { border-color: #ff4fa3; }
+  a.row.pink:hover .go { color: #ff4fa3; }
+
+  .grp {
+    display: grid; grid-template-columns: 5rem 1fr; gap: 0 .9rem; align-items: baseline;
+    padding: .95rem 1.1rem; border: 1px solid var(--line); border-radius: 14px;
+  }
+  .grp h3 { font: 400 12px/1.9 var(--mono); color: var(--mute); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0 1rem; }
+  .chips span {
+    font: 500 15px/1.9 var(--sans); cursor: default;
+    transition: color .15s, opacity .2s;
+  }
+  #p-skill:hover .chips span { opacity: .3; }
+  #p-skill .chips span:hover { opacity: 1; color: var(--acc); }
+
+  .dyn { display: contents; animation: none !important; }
+  .dyn > * { animation: in .45s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--base, 0s); }
+  .dyn > *:nth-child(2) { animation-delay: calc(var(--base, 0s) + .05s); }
+  .dyn > *:nth-child(3) { animation-delay: calc(var(--base, 0s) + .1s); }
+  .dyn > *:nth-child(4) { animation-delay: calc(var(--base, 0s) + .15s); }
+  .dyn > *:nth-child(5) { animation-delay: calc(var(--base, 0s) + .2s); }
+  .dyn > *:nth-child(n+6) { animation-delay: calc(var(--base, 0s) + .25s); }
+  .note { font: 400 12px var(--mono); color: var(--mute); text-align: center; padding: 1rem 0; }
+
+  footer { margin-top: 2.5rem; text-align: center; font: 400 12px var(--mono); color: #5c5c58; }
+  footer a:hover { color: var(--fg); }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="lang" id="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="tr" aria-pressed="true">TR</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+  </div>
+
+  <header class="me">
+    <div class="av" id="av">g</div>
+    <h1>mete</h1>
+    <p class="handle">@grawty</p>
+    <p class="bio" data-i="bio"></p>
+    <div id="music"></div>
+  </header>
+
+  <div class="tabs-wrap">
+    <div class="tabs" id="tabs" role="tablist">
+      <span class="pill" id="pill" aria-hidden="true"></span>
+      <button role="tab" data-tab="skill" aria-selected="true" aria-controls="p-skill"><span data-i="t_skill"></span></button>
+      <button role="tab" data-tab="social" aria-selected="false" aria-controls="p-social" tabindex="-1"><span data-i="t_social"></span></button>
+      <button role="tab" data-tab="repolar" aria-selected="false" aria-controls="p-repolar" tabindex="-1"><span data-i="t_repos"></span><em id="repoCount" hidden></em></button>
+      <button role="tab" data-tab="linkler" aria-selected="false" aria-controls="p-linkler" tabindex="-1"><span data-i="t_links"></span></button>
+    </div>
+  </div>
+
+  <section class="panel" id="p-skill" role="tabpanel">
+    <div class="grp"><h3 data-i="g_code"></h3><div class="chips"><span>C#</span><span>.NET</span><span>PHP</span><span>JavaScript</span><span>TypeScript</span><span>Node.js</span><span>Python</span><span>HTML</span><span>CSS</span></div></div>
+    <div class="grp"><h3 data-i="g_db"></h3><div class="chips"><span>MySQL</span><span>MSSQL</span><span>T-SQL</span></div></div>
+    <div class="grp"><h3 data-i="g_design"></h3><div class="chips"><span>3ds Max</span><span>Photoshop</span></div></div>
+    <div class="grp"><h3 data-i="g_tools"></h3><div class="chips"><span>Git</span><span>GitHub</span><span>Word</span><span>Excel</span><span>PowerPoint</span><span>Access</span><span>Outlook</span></div></div>
+  </section>
+
+  <section class="panel" id="p-social" role="tabpanel" hidden>
+    <a class="row" href="https://www.youtube.com/@grawty" target="_blank" rel="noopener"><span class="t"><b>youtube</b><small>@grawty</small></span><span class="go">↗</span></a>
+    <a class="row" href="https://x.com/grwwty" target="_blank" rel="noopener"><span class="t"><b>x</b><small>@grwwty</small></span><span class="go">↗</span></a>
+    <a class="row" href="https://www.linkedin.com/in/grawty" target="_blank" rel="noopener"><span class="t"><b>linkedin</b><small>in/grawty</small></span><span class="go">↗</span></a>
+  </section>
+
+  <section class="panel" id="p-repolar" role="tabpanel" hidden>
+    <div class="dyn" id="repos"></div>
+  </section>
+
+  <section class="panel" id="p-linkler" role="tabpanel" hidden>
+    <a class="row pink" href="https://top.gg/bot/783252170120233001" target="_blank" rel="noopener"><span class="t"><b>Puki</b><small data-i="l_bot"></small></span><span class="go">↗</span></a>
+  </section>
+
+  <footer>© <span id="y"></span> grawty · <a href="#top" id="up" data-i="up"></a></footer>
+</div>
+
+<script>
+(() => {
+  const USER = "grawty";
+
+  const MUSIC = { name: "ne soran var ne bilen", url: "" };
+
+  const HIDE = ["grawty"];
+
+  const STR = {
+    tr: {
+      bio: "hello",
+      t_skill: "skill", t_social: "social", t_repos: "repolar", t_links: "linkler",
+      g_code: "kod", g_db: "veritabanı", g_design: "tasarım", g_tools: "araçlar",
+      l_bot: "discord botum",
+      no_desc: "açıklama yok, kod konuşsun.",
+      loading: "yükleniyor…", failed: "repolar yüklenemedi.", see_gh: "github'a bak", empty: "henüz burada gösterecek repo yok.",
+      up: "yukarı"
+    },
+    en: {
+      bio: "hello",
+      t_skill: "skills", t_social: "social", t_repos: "repos", t_links: "links",
+      g_code: "code", g_db: "database", g_design: "design", g_tools: "tools",
+      l_bot: "my discord bot",
+      no_desc: "no description, the code speaks.",
+      loading: "loading…", failed: "couldn't load repos.", see_gh: "open github", empty: "no repos to show yet.",
+      up: "top"
+    }
+  };
+
+  const $ = s => document.querySelector(s);
+  const mkEl = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+
+  let lang = "tr";
+  try { lang = localStorage.getItem("lang") || ""; } catch (e) {}
+  if (!STR[lang]) lang = (navigator.language || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+  const T = k => STR[lang][k];
+
+  let repos = null, failed = false;
+
+  function renderMusic() {
+    const box = $("#music");
+    if (!MUSIC.url) { box.replaceChildren(); return; }
+    const eq = mkEl("span", { className: "eq", ariaHidden: "true" }, ...[1, 2, 3, 4].map(() => mkEl("i")));
+    const tx = mkEl("span", { className: "tx" },
+      mkEl("span", { className: "lb", textContent: "Spotify" }),
+      MUSIC.name);
+    box.replaceChildren(mkEl("a", { className: "music", href: MUSIC.url, target: "_blank", rel: "noopener" }, eq, tx));
+  }
+
+  function renderRepos() {
+    const box = $("#repos");
+    box.replaceChildren();
+    if (failed) {
+      box.append(mkEl("p", { className: "note" }, T("failed") + " ",
+        mkEl("a", { href: `https://github.com/${USER}?tab=repositories`, textContent: T("see_gh"), style: "text-decoration:underline" })));
+      return;
+    }
+    if (!repos) { box.append(mkEl("p", { className: "note", textContent: T("loading") })); return; }
+    if (!repos.length) { box.append(mkEl("p", { className: "note", textContent: T("empty") })); return; }
+
+    repos.slice(0, 8).forEach(r => {
+      const meta = [r.language, r.stargazers_count ? "★ " + r.stargazers_count : ""].filter(Boolean).join(" · ");
+      box.append(mkEl("a", { className: "row", href: r.html_url, target: "_blank", rel: "noopener" },
+        mkEl("span", { className: "t" },
+          mkEl("b", { textContent: r.name }),
+          mkEl("small", { textContent: r.description || T("no_desc") })),
+        mkEl("span", { className: "meta", textContent: meta })));
+    });
+  }
+
+  const names = ["skill", "social", "repolar", "linkler"];
+  const tabs = [...document.querySelectorAll("#tabs button")];
+  const pill = $("#pill");
+  let cur = "skill";
+
+  function movePill(animate = true) {
+    const b = tabs.find(t => t.dataset.tab === cur);
+    if (!animate) pill.style.transition = "none";
+    pill.style.width = b.offsetWidth + "px";
+    pill.style.transform = `translateX(${b.offsetLeft}px)`;
+    if (!animate) { pill.offsetWidth; pill.style.transition = ""; }
+  }
+
+  function show(name, focus) {
+    if (!names.includes(name)) name = "skill";
+    const dir = Math.sign(names.indexOf(name) - names.indexOf(cur));
+    document.documentElement.style.setProperty("--dx", dir * 28 + "px");
+    cur = name;
+    tabs.forEach(b => {
+      const on = b.dataset.tab === name;
+      b.setAttribute("aria-selected", String(on));
+      b.tabIndex = on ? 0 : -1;
+      if (on && focus) b.focus();
+    });
+    names.forEach(n => { $("#p-" + n).hidden = n !== name; });
+    movePill();
+    history.replaceState(null, "", name === "skill" ? location.pathname : "#" + name);
+  }
+
+  tabs.forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
+
+  $("#tabs").addEventListener("keydown", e => {
+    const i = names.indexOf(cur);
+    const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: names.length - 1 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    show(names[(to + names.length) % names.length], true);
+  });
+
+  let sx = 0, sy = 0;
+  document.addEventListener("touchstart", e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    const n = names.indexOf(cur) + (dx < 0 ? 1 : -1);
+    if (n >= 0 && n < names.length) show(names[n]);
+  }, { passive: true });
+
+  function applyLang(l) {
+    lang = l;
+    try { localStorage.setItem("lang", l); } catch (e) {}
+    document.documentElement.lang = l;
+    document.querySelectorAll("[data-i]").forEach(el => { el.textContent = T(el.dataset.i); });
+    document.querySelectorAll("#lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === l)));
+    $("#tabs").setAttribute("aria-label", l === "tr" ? "Bölümler" : "Sections");
+    renderMusic(); renderRepos();
+    movePill(false);
+  }
+  document.querySelectorAll("#lang button").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+
+  setTimeout(() => document.documentElement.classList.remove("boot"), 1600);
+  $("#y").textContent = new Date().getFullYear();
+  $("#up").addEventListener("click", e => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); });
+
+  const img = new Image();
+  img.alt = ""; img.src = `https://github.com/${USER}.png?size=192`;
+  img.onload = () => { $("#av").textContent = ""; $("#av").append(img); };
+
+  const first = location.hash.slice(1);
+  cur = names.includes(first) ? first : "skill";
+  applyLang(lang);
+  show(cur);
+  movePill(false);
+  addEventListener("resize", () => movePill(false));
+  if (document.fonts) document.fonts.ready.then(() => movePill(false));
+
+  fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=pushed`)
+    .then(r => { if (!r.ok) throw 0; return r.json(); })
+    .then(list => {
+      repos = list
+        .filter(r => !r.fork && r.name.toLowerCase() !== `${USER}.github.io` && !HIDE.includes(r.name.toLowerCase()))
+        .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+      if (repos.length) { const c = $("#repoCount"); c.textContent = repos.length; c.hidden = false; }
+      renderRepos(); movePill(false);
+    })
+    .catch(() => { failed = true; renderRepos(); });
+})();
+</script>
+</body>
+</html>
